@@ -9,22 +9,57 @@
  * A server.js has been provided to supply these values.
  */
 
+
+// MAKE CALCULATOR CLASS
 // Global constant for mortgage simulation
 const LOAN_TERM_MONTHS = 360; // 30 Years
 const INTEREST_RATE = 7.0; // 7.0% baseline interest rate
 const ASSESSMENT_RATE_BUFFER = 3.0; // 3.0% buffer added to interest rates
 
-// Legacy placeholder functions to replace with API calls
-function getTax(income) {
-    // REPLACE THIS
-    // Write your TAX API call code here.
-    return Math.round(income * 0.25);
+
+async function getTax(income) {
+    const url = new URL("http://localhost:3000/api/tax");
+    url.searchParams.set("income", income);
+
+    const response = await fetch( 
+        url,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${process.env.API_TOKEN}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Tax API request failed: ${response.status}`);
+    }
+
+    const taxDetails = await response.json();
+    return taxDetails.tax;
 }
 
-function getHEM(income, dependents) {
-    // REPLACE THIS
-    // Write your HEM API call code here.
-    return 2000 + (dependents * 400);
+async function getHEM(income, dependents) {
+    const url = new URL("http://localhost:3000/api/hem");
+    url.searchParams.set("income", income);
+    url.searchParams.set("dependents", dependents);
+    
+    const response = await fetch( 
+        url,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${process.env.API_TOKEN}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`HEM API request failed: ${response.status}`);
+    }
+
+    const hemDetails = await response.json();
+    return hemDetails.hem;
 }
 
 /**
@@ -63,6 +98,8 @@ function calculateBorrowingPower(income, dependents, expenses, creditLimits, ann
     };
 }
 
+
+//MAKE ITS OWN CLASS
 function runConsoleMode() {
     const readline = require('readline');
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
