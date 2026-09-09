@@ -1,6 +1,7 @@
 {
   "devDependencies": {
-    "mocha": "^11.7.0"
+    "mocha": "^11.8.0",
+    "sinon": "^22.1.0"
   },
   "scripts": {
     "api": "node server.js",
