@@ -12,16 +12,23 @@ describe('Borrowing Power Calculator Tests', () => {
   let getTaxStub, getHEMStub;
  
   beforeEach(() => {
+    /**
+     * Creates objects that provide mock api call outputs
+    */
+
     getTaxStub = sinon.stub(CalculatorAPIHelper, 'getTax');
     getHEMStub = sinon.stub(CalculatorAPIHelper, 'getHEM');
   });
 
   afterEach(() => {
+    /**
+     * Undoes stubs to be reset for next test case
+    */
     sinon.restore();
   });
 
 
-  // Test case for standard values
+  // Test case for normal values
   it('should calculate borrowing power for standard values', async () => {
 
     getTaxStub.resolves(24000);
@@ -38,7 +45,7 @@ describe('Borrowing Power Calculator Tests', () => {
     assert.strictEqual(result.monthlyRepayment, 4700);
   });
 
-  //Test case for edge case values
+
   it('should return 0 when repayment capacity is exactly zero', async () => {
     getTaxStub.resolves(0);
     getHEMStub.resolves(2000);
@@ -75,10 +82,6 @@ describe('Borrowing Power Calculator Tests', () => {
 
     const result = await BorrowingCalculator.calculateBorrowingPower(500000, 0, 1000, 20000, 7.5);
 
-    // netMonthlyIncome = (500000 - 150000) / 12 = 29166.67
-    // livingExpenses = max(1000, 800) = 1000
-    // creditCardLiability = 20000 * 0.03 = 600
-    // maxMonthlyRepayment = 29166.67 - 1000 - 600 = 27566.67
     const expectedRepayment = Number(((500000 - 150000) / 12 - 1000 - 600).toFixed(2));
     assert.strictEqual(result.monthlyRepayment, expectedRepayment);
     assert.ok(result.maxLoanAmount > 0);
@@ -100,13 +103,19 @@ describe('Calculator API Helper Tests', () => {
   const originalKey = process.env.SERVER_AUTH_KEY;
 
   beforeEach(() => {
+    /**
+     * Creates fake key and fetch stub to simulate server for get requests
+    */
     process.env.SERVER_AUTH_KEY = 'test-key';
     fetchStub = sinon.stub(global, 'fetch');
   });
 
   afterEach(() => {
+    /**
+     * Restores function stub for next test case 
+     */ 
     sinon.restore();
-    process.env.SERVER_AUTH_KEY = originalKey;
+    process.env.SERVER_AUTH_KEY = originalKey; //Restore original API key
   });
 
   //Successful API call checks 
@@ -148,7 +157,7 @@ describe('Calculator API Helper Tests', () => {
     assert.strictEqual(options.headers.Authorization, 'Bearer test-key');
   });
 
-  //Normal inputs
+  //Test case for normal inputs
   it('getTax should return the tax value on a successful response', async () => {
     fetchStub.resolves({ ok: true, json: async () => ({ tax: 15000 }) });
 
@@ -172,7 +181,7 @@ describe('Calculator API Helper Tests', () => {
       
     fetchStub.resolves({ ok: false, status: 400 });
 
-    await assert.rejects(() => CalculatorAPIHelper.getTax(-9000), /Tax API request failed: 400/);
+    await assert.rejects(() => CalculatorAPIHelper.getTax(9000), /Tax API request failed: 400/);
 
   });
 
@@ -196,6 +205,18 @@ describe('Calculator API Helper Tests', () => {
 describe('Input Validator Tests', () => { 
 
   function makeFakeReadline(responses) {
+    /**
+     * Creates a fake readline interface that supplies predefined user responses
+     * 
+     * Each call to question() resolves to the next response in order, removing
+     * it from an internal queue. Once exhausted, it resolves to undefined.
+     * The original responses array is not modified.
+     * 
+     * @param {string[]} responses - Simulated user inputs in the order entered.
+     * @returns {{ question: () => Promise<string | undefined> }}
+     *  An object with an async question() method that supplies queued responses.
+     */
+
     const queue = [...responses]; // copy responses iterable to queue
 
     return {
@@ -203,7 +224,7 @@ describe('Input Validator Tests', () => {
     };
   }
 
-  //Normal inputs
+  //Test cases for normal inputs
   it('should accept a valid number on the first try', async () => {
     const rl = makeFakeReadline(['50000']);
     const value = await validateNumber('Income: $', rl, 0, 999999, false);
@@ -222,7 +243,7 @@ describe('Input Validator Tests', () => {
     assert.strictEqual(value, 25000);
   });
 
-  //Out of limits inputs
+  //Test cases for out of limits inputs
   it('should reject values above the upper limit and retry', async () => {
     const rl = makeFakeReadline(['5000000', '100000']);
     const value = await validateNumber('Income: $', rl, 0, 999999, false);
@@ -235,7 +256,7 @@ describe('Input Validator Tests', () => {
     assert.strictEqual(value, 0);
   });
 
-  //Abnormal inputs 
+  //Test cases for abnormal inputs 
   it('should reject non-integer input when integerOnly is true', async () => {
     const rl = makeFakeReadline(['2.5', '2']);
     const value = await validateNumber('Dependents: ', rl, 0, 10, true);
