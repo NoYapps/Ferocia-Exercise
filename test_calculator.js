@@ -8,22 +8,23 @@ const assert = require('assert');
 const sinon = require('sinon');
 const {BorrowingCalculator, CalculatorAPIHelper, validateNumber} = require('./borrowingCalculator');
 
+/** Tests BorrowingCalculator.calculateBorrowingPower with mock API fetcher functions */
 describe('Borrowing Power Calculator Tests', () => {
   let getTaxStub, getHEMStub;
  
+  /**
+   * Creates objects that provide mock api call outputs
+  */
   beforeEach(() => {
-    /**
-     * Creates objects that provide mock api call outputs
-    */
 
     getTaxStub = sinon.stub(CalculatorAPIHelper, 'getTax');
     getHEMStub = sinon.stub(CalculatorAPIHelper, 'getHEM');
   });
 
+  /**
+   * Undoes stubs to be reset for next test case
+  */
   afterEach(() => {
-    /**
-     * Undoes stubs to be reset for next test case
-    */
     sinon.restore();
   });
 
@@ -98,14 +99,16 @@ describe('Borrowing Power Calculator Tests', () => {
   });
 });
 
+
+/** Tests API helpers with mocked fetch responses. */
 describe('Calculator API Helper Tests', () => {
   let fetchStub;
   const originalKey = process.env.SERVER_AUTH_KEY;
 
+  /**
+   * Creates fake key and fetch stub to simulate server for get requests
+  */
   beforeEach(() => {
-    /**
-     * Creates fake key and fetch stub to simulate server for get requests
-    */
     process.env.SERVER_AUTH_KEY = 'test-key';
     fetchStub = sinon.stub(global, 'fetch');
   });
@@ -202,21 +205,21 @@ describe('Calculator API Helper Tests', () => {
 
 });
 
+/** Tests standard input validator function with mock readline */
 describe('Input Validator Tests', () => { 
 
+  /**
+   * Creates a fake readline interface that supplies predefined user responses
+   * 
+   * Each call to question() resolves to the next response in order, removing
+   * it from an internal queue. Once exhausted, it resolves to undefined.
+   * The original responses array is not modified.
+   * 
+   * @param {string[]} responses - Simulated user inputs in the order entered.
+   * @returns {{ question: () => Promise<string | undefined> }}
+   *  An object with an async question() method that supplies queued responses.
+  */
   function makeFakeReadline(responses) {
-    /**
-     * Creates a fake readline interface that supplies predefined user responses
-     * 
-     * Each call to question() resolves to the next response in order, removing
-     * it from an internal queue. Once exhausted, it resolves to undefined.
-     * The original responses array is not modified.
-     * 
-     * @param {string[]} responses - Simulated user inputs in the order entered.
-     * @returns {{ question: () => Promise<string | undefined> }}
-     *  An object with an async question() method that supplies queued responses.
-     */
-
     const queue = [...responses]; // copy responses iterable to queue
 
     return {
